@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DatamDrive — Design Comparison Board</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 40px 48px;
+    }
+
+    /* Board header */
+    .board-header { text-align: center; margin-bottom: 56px; }
+    .board-header h1 { font-size: 28px; font-weight: 600; color: #fff; letter-spacing: -0.5px; }
+    .board-header p { color: #666; margin-top: 8px; font-size: 14px; }
+    .direction-labels { display: flex; gap: 16px; justify-content: center; margin-top: 16px; }
+    .direction-label { padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+    .label-a { background: rgba(0,120,212,0.15); color: #60AAFF; border: 1px solid rgba(0,120,212,0.3); }
+    .label-b { background: rgba(55,148,255,0.12); color: #3794FF; border: 1px solid rgba(55,148,255,0.25); }
+
+    /* Section */
+    .screen-section { margin-bottom: 72px; }
+    .section-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .section-desc { font-size: 13px; color: #555; margin-bottom: 28px; }
+    .variants-row { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+    .variant-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .variant-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; }
+    .variant-label.a { color: #60AAFF; }
+    .variant-label.b { color: #3794FF; }
+
+    /* Window chrome */
+    .window { border-radius: 10px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.65); }
+    .window-titlebar { height: 32px; display: flex; align-items: center; padding: 0 14px; gap: 8px; user-select: none; }
+    .window-titlebar.light { background: #E2E2E2; }
+    .window-titlebar.dark { background: #181826; }
+    .titlebar-title { flex: 1; text-align: center; font-size: 12px; }
+    .titlebar-title.light { color: #555; }
+    .titlebar-title.dark { color: #555; }
+    .win-btn { width: 13px; height: 13px; border-radius: 50%; display: inline-block; }
+    .win-close { background: #FF5F57; }
+    .win-min   { background: #FEBC2E; }
+    .win-max   { background: #28C840; }
+
+    .screen-divider { border: none; border-top: 1px solid #1E1E1E; margin: 60px 0; }
+
+    /* ================================================================
+       WIZARD — VARIANT A (FLUENT NATIVE)
+       ================================================================ */
+    .wizard-a { display: flex; height: 480px; background: #FFFFFF; }
+
+    .wiz-a-sidebar {
+      width: 224px; background: #2C2C3E; padding: 28px 20px;
+      display: flex; flex-direction: column;
+    }
+    .wiz-a-logo {
+      display: flex; align-items: center; gap: 9px; margin-bottom: 40px;
+    }
+    .wiz-a-logo-icon {
+      width: 28px; height: 28px; background: #0078D4; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .wiz-a-logo-text { color: #fff; font-size: 14px; font-weight: 600; }
+
+    .wiz-a-steps { display: flex; flex-direction: column; }
+    .wiz-a-step { display: flex; align-items: flex-start; gap: 13px; padding: 11px 0; position: relative; }
+    .wiz-a-step:not(:last-child)::after {
+      content: ''; position: absolute; left: 11px; top: 34px;
+      width: 2px; height: calc(100% - 10px); background: #3D3D55;
+    }
+    .wiz-a-num {
+      width: 22px; height: 22px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+      flex-shrink: 0; z-index: 1;
+    }
+    .wiz-a-num.active { background: #0078D4; color: #fff; }
+    .wiz-a-num.pending { background: #3D3D55; color: #666; }
+    .wiz-a-step-name { font-size: 13px; font-weight: 500; margin-top: 2px; }
+    .wiz-a-step-name.active { color: #fff; }
+    .wiz-a-step-name.pending { color: #555; }
+    .wiz-a-step-sub { font-size: 11px; color: #4A4A62; margin-top: 2px; }
+
+    .wiz-a-main { flex: 1; padding: 40px 44px; display: flex; flex-direction: column; }
+    .wiz-a-main h2 { font-size: 24px; font-weight: 600; color: #111; margin-bottom: 8px; }
+    .wiz-a-subtitle { font-size: 13px; color: #777; margin-bottom: 32px; line-height: 1.5; }
+    .wiz-a-field-lbl { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .wiz-a-input-wrap { position: relative; margin-bottom: 22px; }
+    .wiz-a-input-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+    .wiz-a-url-input {
+      width: 100%; height: 40px; border: 1.5px solid #DCDCDC; border-radius: 4px;
+      padding: 0 12px 0 38px; font-size: 13px; color: #AAA; background: #FAFAFA;
+      font-family: inherit; display: flex; align-items: center;
+      line-height: 40px;
+    }
+    .wiz-a-btn {
+      width: 100%; height: 44px; background: #0078D4; color: #fff; border: none;
+      border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-bottom: 16px; font-family: inherit;
+    }
+    .win-logo-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+      width: 16px; height: 16px;
+    }
+    .win-logo-grid span { background: rgba(255,255,255,0.92); border-radius: 1px; }
+    .wiz-a-sso-note {
+      display: flex; align-items: flex-start; gap: 9px;
+      background: #F0FAF0; border: 1px solid #B8DFC0; border-radius: 4px;
+      padding: 11px 13px; margin-bottom: 20px;
+    }
+    .wiz-a-sso-note .shield { color: #2A7D3A; font-size: 15px; flex-shrink: 0; padding-top: 1px; }
+    .wiz-a-sso-note p { font-size: 12px; color: #1C5C28; line-height: 1.55; }
+    .wiz-a-fallback { font-size: 11px; color: #AAA; text-align: center; margin-top: auto; padding-top: 14px; border-top: 1px solid #F0F0F0; }
+
+    /* ================================================================
+       WIZARD — VARIANT B (PRO DARK)
+       ================================================================ */
+    .wizard-b { display: flex; height: 480px; background: #1E1E2E; }
+
+    .wiz-b-sidebar { width: 200px; background: #13131F; padding: 24px 16px; display: flex; flex-direction: column; }
+    .wiz-b-logo { display: flex; align-items: center; gap: 9px; margin-bottom: 44px; padding: 0 4px; }
+    .wiz-b-logo-dot { width: 8px; height: 8px; background: #3794FF; border-radius: 50%; flex-shrink: 0; }
+    .wiz-b-logo-text { font-size: 13px; font-weight: 600; color: #E0E0E0; }
+
+    .wiz-b-steps { display: flex; flex-direction: column; padding: 0 4px; }
+    .wiz-b-step { display: flex; align-items: flex-start; gap: 14px; padding: 9px 0; position: relative; }
+    .wiz-b-step:not(:last-child)::after {
+      content: ''; position: absolute; left: 6px; top: 26px;
+      width: 1px; height: calc(100% - 6px); background: #252540;
+    }
+    .wiz-b-dot-wrap { flex-shrink: 0; padding-top: 2px; z-index: 1; }
+    .wiz-b-dot { width: 13px; height: 13px; border-radius: 50%; }
+    .wiz-b-dot.active { background: #3794FF; box-shadow: 0 0 0 3px rgba(55,148,255,0.18); }
+    .wiz-b-dot.pending { background: transparent; border: 1.5px solid #2D2D48; }
+    .wiz-b-step-label { font-size: 12px; padding-top: 1px; }
+    .wiz-b-step-label.active { color: #D8D8D8; font-weight: 500; }
+    .wiz-b-step-label.pending { color: #3A3A58; }
+
+    .wiz-b-main { flex: 1; padding: 36px 40px; display: flex; flex-direction: column; }
+    .wiz-b-main h2 { font-size: 22px; font-weight: 600; color: #E0E0E0; margin-bottom: 28px; }
+    .wiz-b-field-lbl { font-size: 10px; font-weight: 700; color: #4A4A6A; text-transform: uppercase; letter-spacing: 1.1px; margin-bottom: 6px; }
+    .wiz-b-url-input {
+      width: 100%; height: 38px; background: #2A2A3A; border: 1px solid #36365A;
+      border-radius: 4px; padding: 0 13px; font-size: 12.5px; color: #55557A;
+      font-family: 'Consolas', 'Courier New', monospace; margin-bottom: 14px;
+      display: flex; align-items: center; line-height: 38px;
+    }
+    .wiz-b-pills { display: flex; gap: 7px; margin-bottom: 28px; flex-wrap: wrap; }
+    .wiz-b-pill {
+      background: #22223A; border: 1px solid #36365A; border-radius: 3px;
+      padding: 3px 8px; font-size: 10.5px; color: #4A4A6A;
+    }
+    .wiz-b-btn {
+      width: 100%; height: 40px; background: #3794FF; color: #fff; border: none;
+      border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      margin-bottom: 14px; font-family: inherit;
+    }
+    .wiz-b-arrow { font-family: monospace; font-size: 15px; }
+    .wiz-b-fallback { font-size: 11px; color: #33335A; line-height: 1.6; }
+    .wiz-b-statusbar {
+      height: 24px; background: #0C0C18; margin-top: auto;
+      display: flex; align-items: center; padding: 0 14px;
+      font-size: 11px; color: #2A2A48; font-family: monospace;
+    }
+
+    /* ================================================================
+       SYNC STATUS — VARIANT A (FLUENT NATIVE)
+       ================================================================ */
+    .status-a { background: #FFFFFF; height: 500px; display: flex; flex-direction: column; }
+
+    .sta-header {
+      height: 52px; background: #FAFAFA; border-bottom: 1px solid #E8E8E8;
+      display: flex; align-items: center; padding: 0 20px; gap: 12px; flex-shrink: 0;
+    }
+    .sta-logo-row { display: flex; align-items: center; gap: 9px; }
+    .sta-logo-icon {
+      width: 22px; height: 22px; background: #0078D4; border-radius: 4px;
+      font-size: 12px; display: flex; align-items: center; justify-content: center;
+    }
+    .sta-logo-name { font-size: 14px; font-weight: 600; color: #111; }
+    .sta-sync-badge {
+      display: flex; align-items: center; gap: 6px; background: #E9F4FB;
+      border: 1px solid #BAD7EF; border-radius: 11px; padding: 3px 10px;
+      font-size: 12px; color: #0078D4; margin-left: auto;
+    }
+    .sta-sync-dot { width: 6px; height: 6px; background: #0078D4; border-radius: 50%; }
+    .sta-lib-count { font-size: 12px; color: #999; margin-left: 12px; }
+
+    .sta-content { flex: 1; padding: 16px 20px 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .sta-section-hd { font-size: 10px; font-weight: 700; color: #AAA; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
+    .sta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .sta-card { border: 1px solid #EBEBEB; border-radius: 8px; padding: 13px 15px; }
+    .sta-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 5px; }
+    .sta-card-name { font-size: 13px; font-weight: 600; color: #111; }
+    .sta-perm {
+      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 9px;
+    }
+    .sta-perm.rw { background: #E8F5E9; color: #2A7D2A; border: 1px solid #C5E1C5; }
+    .sta-perm.ro { background: #FFF8E1; color: #C45000; border: 1px solid #F9DFAA; }
+    .sta-card-url { font-size: 11px; color: #AAA; margin-bottom: 9px; }
+    .sta-card-status { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+    .sta-card-status.active { color: #0078D4; }
+    .sta-card-status.idle { color: #AAA; }
+
+    .sta-log-section { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .sta-log-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .sta-log-table th {
+      text-align: left; padding: 6px 8px; background: #F5F5F5;
+      font-size: 10px; font-weight: 700; color: #AAA; text-transform: uppercase;
+      letter-spacing: 0.4px; border-bottom: 1px solid #EBEBEB;
+    }
+    .sta-log-table td { padding: 6px 8px; color: #333; border-bottom: 1px solid #F5F5F5; }
+    .sta-log-table tr:nth-child(even) td { background: #FAFAFA; }
+    .sta-lv {
+      font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px;
+    }
+    .sta-lv.info { background: #E9F4FB; color: #0078D4; }
+    .sta-lv.warn { background: #FFF8E1; color: #C45000; }
+    .sta-lv.error { background: #FCEAEA; color: #C62828; }
+
+    .sta-footer {
+      height: 28px; background: #F5F5F5; border-top: 1px solid #EBEBEB; flex-shrink: 0;
+      display: flex; align-items: center; padding: 0 20px; gap: 20px;
+      font-size: 11px; color: #AAA;
+    }
+    .sta-footer-ok { display: flex; align-items: center; gap: 5px; }
+    .sta-footer-dot { width: 6px; height: 6px; border-radius: 50%; background: #28A745; }
+
+    /* ================================================================
+       SYNC STATUS — VARIANT B (PRO DARK)
+       ================================================================ */
+    .status-b { background: #1E1E2E; height: 500px; display: flex; }
+
+    .stb-sidebar { width: 198px; background: #13131F; display: flex; flex-direction: column; flex-shrink: 0; }
+    .stb-sidebar-hd {
+      padding: 11px 14px; font-size: 10px; font-weight: 700;
+      color: #3A3A5A; text-transform: uppercase; letter-spacing: 1px;
+      border-bottom: 1px solid #1A1A2A;
+    }
+    .stb-lib-row {
+      display: flex; align-items: center; gap: 9px; padding: 10px 14px;
+      cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.025);
+    }
+    .stb-lib-row.active { background: #252538; }
+    .stb-lib-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .stb-lib-dot.sync { background: #3794FF; }
+    .stb-lib-dot.idle { background: #2D2D4A; }
+    .stb-lib-dot.ro   { background: #C45000; }
+    .stb-lib-info { flex: 1; min-width: 0; }
+    .stb-lib-name { font-size: 12px; color: #C0C0D0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stb-lib-meta { font-size: 10px; color: #3A3A5A; margin-top: 1px; }
+    .stb-perm {
+      font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 2px; flex-shrink: 0;
+    }
+    .stb-perm.rw { background: rgba(55,148,255,0.12); color: #3794FF; }
+    .stb-perm.ro { background: rgba(196,80,0,0.12); color: #C45000; }
+    .stb-add { margin: 12px; border: 1px dashed #28284A; border-radius: 4px; padding: 8px; text-align: center; font-size: 11px; color: #2D2D4A; cursor: pointer; }
+
+    .stb-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .stb-toolbar {
+      height: 36px; background: #232336; flex-shrink: 0;
+      display: flex; align-items: center; padding: 0 14px; gap: 4px;
+      border-bottom: 1px solid #1A1A2A;
+    }
+    .stb-filter {
+      padding: 3px 9px; border-radius: 3px; font-size: 10.5px; font-weight: 600;
+      cursor: pointer; border: none; font-family: inherit;
+    }
+    .stb-filter.on  { background: #38385A; color: #D8D8E8; }
+    .stb-filter.off { background: transparent; color: #3A3A5A; }
+    .stb-poll-time { margin-left: auto; font-size: 10.5px; color: #30304A; }
+
+    .stb-log { flex: 1; overflow: hidden; }
+    .stb-line {
+      display: flex; align-items: baseline; gap: 10px;
+      padding: 3.5px 14px; font-size: 11.5px;
+    }
+    .stb-line:hover { background: rgba(255,255,255,0.02); }
+    .stb-ts { color: #30304A; font-family: 'Consolas','Courier New',monospace; font-size: 10.5px; flex-shrink: 0; width: 58px; }
+    .stb-lv {
+      font-size: 9.5px; font-weight: 700; padding: 1px 5px; border-radius: 2px; flex-shrink: 0;
+    }
+    .stb-lv.info  { background: rgba(55,148,255,0.12); color: #3794FF; }
+    .stb-lv.warn  { background: rgba(196,80,0,0.12);   color: #C45000; }
+    .stb-lv.error { background: rgba(198,40,40,0.15);  color: #E85555; }
+    .stb-ev { color: #44446A; font-size: 10.5px; flex-shrink: 0; min-width: 90px; }
+    .stb-file { color: #3794FF; font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .stb-statusbar {
+      height: 24px; background: #0C0C18; flex-shrink: 0;
+      display: flex; align-items: center; padding: 0 14px;
+      font-size: 10px; color: #2C2C48; gap: 16px;
+      border-top: 1px solid #161625;
+    }
+    .stb-s-item { display: flex; align-items: center; gap: 4px; }
+    .stb-s-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .stb-s-dot.b { background: #3794FF; }
+    .stb-s-dot.g { background: #2C2C48; }
+
+    /* ================================================================
+       TRAY — VARIANT A (FLUENT NATIVE)
+       ================================================================ */
+    .tray-a-bg {
+      background: linear-gradient(135deg, #E8E8E8, #D8D8D8);
+      padding: 32px;
+      display: flex;
+      gap: 48px;
+      align-items: flex-start;
+      min-height: 330px;
+    }
+    .tray-a-menu {
+      background: #FDFDFD; border-radius: 8px;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.18); width: 242px; overflow: hidden;
+    }
+    .tray-a-mhdr {
+      padding: 11px 15px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #ECECEC;
+    }
+    .tray-a-micon {
+      width: 24px; height: 24px; background: #0078D4; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;
+    }
+    .tray-a-mtitle { font-size: 13px; font-weight: 600; color: #111; }
+    .tray-a-mstatus { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #0078D4; margin-top: 2px; }
+    .tray-a-mdot { width: 5px; height: 5px; background: #0078D4; border-radius: 50%; }
+    .tray-a-div { height: 1px; background: #ECECEC; margin: 2px 0; }
+    .tray-a-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 15px; font-size: 13px; color: #111; cursor: pointer;
+    }
+    .tray-a-item:hover { background: #F2F2F2; }
+    .tray-a-item.pri { font-weight: 600; color: #0078D4; }
+    .tray-a-item.red { color: #C0392B; }
+    .tray-a-iico { width: 16px; text-align: center; color: #777; font-size: 14px; }
+    .tray-a-chev { margin-left: auto; color: #CCC; }
+    .tray-a-sub { padding-left: 41px; }
+    .tray-a-subitem {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 15px 6px 0; font-size: 12px; color: #555;
+    }
+    .tray-a-libdot { width: 7px; height: 7px; border-radius: 50%; }
+    .tray-a-libdot.g { background: #28A745; }
+    .tray-a-libdot.o { background: #C45000; }
+
+    .tray-a-icons-col { display: flex; flex-direction: column; gap: 20px; }
+    .tray-a-state { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .tray-a-ibox {
+      width: 52px; height: 52px; background: #E0E0E0; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .tray-a-slbl { font-size: 11px; color: #888; }
+
+    /* ================================================================
+       TRAY — VARIANT B (PRO DARK)
+       ================================================================ */
+    .tray-b-bg {
+      background: #0D0D18;
+      padding: 32px;
+      display: flex;
+      gap: 48px;
+      align-items: flex-start;
+      min-height: 330px;
+    }
+    .tray-b-menu {
+      background: #252538; border-radius: 6px;
+      box-shadow: 0 8px 36px rgba(0,0,0,0.55); width: 242px; overflow: hidden;
+    }
+    .tray-b-mhdr { padding: 12px 14px; background: #1E1E30; border-bottom: 1px solid #1A1A28; }
+    .tray-b-mtitle { font-size: 13px; font-weight: 600; color: #D8D8E8; }
+    .tray-b-mstatus { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #30304A; margin-top: 3px; }
+    .tray-b-statdot { color: #3794FF; }
+    .tray-b-div { height: 1px; background: #1A1A28; margin: 2px 0; }
+    .tray-b-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-size: 12px; cursor: pointer; }
+    .tray-b-item:hover { background: #30304A; }
+    .tray-b-item.act { color: #C0C0D4; }
+    .tray-b-item.red { color: #E05050; }
+    .tray-b-iico { width: 14px; text-align: center; color: #3A3A5A; }
+    .tray-b-libdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .tray-b-libdot.b { background: #3794FF; }
+    .tray-b-libdot.o { background: #C45000; }
+    .tray-b-libinfo { flex: 1; }
+    .tray-b-libname { font-size: 12px; color: #B8B8CC; }
+    .tray-b-libmeta { font-size: 10px; color: #30304A; }
+    .tray-b-pb {
+      font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 2px; flex-shrink: 0;
+    }
+    .tray-b-pb.rw { background: rgba(55,148,255,0.12); color: #3794FF; }
+    .tray-b-pb.ro { background: rgba(196,80,0,0.12); color: #C45000; }
+
+    .tray-b-icons-col { display: flex; flex-direction: column; gap: 20px; }
+    .tray-b-state { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .tray-b-ibox {
+      width: 52px; height: 52px; background: #1A1A28; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+      position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .tray-b-badge {
+      position: absolute; top: -2px; right: -2px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #E05050; border: 2px solid #0D0D18;
+    }
+    .tray-b-slbl { font-size: 11px; color: #30304A; }
+
+  </style>
+</head>
+<body>
+
+<div class="board-header">
+  <h1>DatamDrive — Design Comparison Board</h1>
+  <p>Setup Wizard · Sync Status Window · Tray Menu &amp; Icons</p>
+  <div class="direction-labels">
+    <span class="direction-label label-a">A — Fluent Native (Windows 11)</span>
+    <span class="direction-label label-b">B — Pro Dark (Developer Tool)</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION 1: SETUP WIZARD
+     ============================================================ -->
+<div class="screen-section">
+  <div class="section-title">1. Setup Wizard</div>
+  <div class="section-desc">First-run experience: enter SharePoint URL, authenticate via Windows SSO, choose libraries.</div>
+
+  <div class="variants-row">
+
+    <!-- WIZARD A -->
+    <div class="variant-wrap">
+      <div class="variant-label a">A — Fluent Native</div>
+      <div class="window">
+        <div class="window-titlebar light">
+          <span class="win-btn win-close"></span>
+          <span class="win-btn win-min"></span>
+          <span class="win-btn win-max"></span>
+          <span class="titlebar-title light">DatamDrive — Setup</span>
+        </div>
+        <div class="wizard-a">
+          <div class="wiz-a-sidebar">
+            <div class="wiz-a-logo">
+              <div class="wiz-a-logo-icon">☁</div>
+              <span class="wiz-a-logo-text">DatamDrive</span>
+            </div>
+            <div class="wiz-a-steps">
+              <div class="wiz-a-step">
+                <div class="wiz-a-num active">1</div>
+                <div>
+                  <div class="wiz-a-step-name active">Connect</div>
+                  <div class="wiz-a-step-sub">SharePoint site URL</div>
+                </div>
+              </div>
+              <div class="wiz-a-step">
+                <div class="wiz-a-num pending">2</div>
+                <div>
+                  <div class="wiz-a-step-name pending">Authenticate</div>
+                  <div class="wiz-a-step-sub">Windows SSO or credentials</div>
+                </div>
+              </div>
+              <div class="wiz-a-step">
+                <div class="wiz-a-num pending">3</div>
+                <div>
+                  <div class="wiz-a-step-name pending">Choose Libraries</div>
+                  <div class="wiz-a-step-sub">Pick what to sync</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="wiz-a-main">
+            <h2>Connect to SharePoint</h2>
+            <div class="wiz-a-subtitle">Enter your on-premise SharePoint site URL to get started.</div>
+            <div class="wiz-a-field-lbl">SharePoint Site URL</div>
+            <div class="wiz-a-input-wrap">
+              <span class="wiz-a-input-icon">🌐</span>
+              <div class="wiz-a-url-input">https://sharepoint.company.local</div>
+            </div>
+            <button class="wiz-a-btn">
+              <div class="win-logo-grid"><span></span><span></span><span></span><span></span></div>
+              Connect with Windows SSO
+            </button>
+            <div class="wiz-a-sso-note">
+              <span class="shield">✓</span>
+              <p>No password stored — DatamDrive uses your existing Windows login automatically via Kerberos/NTLM. Zero credentials are ever written to disk.</p>
+            </div>
+            <div class="wiz-a-fallback">
+              Not on a domain? A credentials prompt will appear instead.<br>Stored securely in Windows Credential Manager (DPAPI), never in plaintext.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WIZARD B -->
+    <div class="variant-wrap">
+      <div class="variant-label b">B — Pro Dark</div>
+      <div class="window">
+        <div class="window-titlebar dark">
+          <span class="win-btn win-close"></span>
+          <span class="win-btn win-min"></span>
+          <span class="win-btn win-max"></span>
+          <span class="titlebar-title dark">DatamDrive — Setup</span>
+        </div>
+        <div class="wizard-b">
+          <div class="wiz-b-sidebar">
+            <div class="wiz-b-logo">
+              <div class="wiz-b-logo-dot"></div>
+              <span class="wiz-b-logo-text">DatamDrive</span>
+            </div>
+            <div class="wiz-b-steps">
+              <div class="wiz-b-step">
+                <div class="wiz-b-dot-wrap"><div class="wiz-b-dot active"></div></div>
+                <span class="wiz-b-step-label active">01 — Connect</span>
+              </div>
+              <div class="wiz-b-step">
+                <div class="wiz-b-dot-wrap"><div class="wiz-b-dot pending"></div></div>
+                <span class="wiz-b-step-label pending">02 — Authenticate</span>
+              </div>
+              <div class="wiz-b-step">
+                <div class="wiz-b-dot-wrap"><div class="wiz-b-dot pending"></div></div>
+                <span class="wiz-b-step-label pending">03 — Libraries</span>
+              </div>
+            </div>
+          </div>
+          <div class="wiz-b-main">
+            <h2>Connect to SharePoint</h2>
+            <div class="wiz-b-field-lbl">Site URL</div>
+            <div class="wiz-b-url-input">https://sharepoint.company.local</div>
+            <div class="wiz-b-pills">
+              <span class="wiz-b-pill">NTLM / Kerberos</span>
+              <span class="wiz-b-pill">No proxy required</span>
+              <span class="wiz-b-pill">No credentials stored</span>
+            </div>
+            <button class="wiz-b-btn">
+              <span class="wiz-b-arrow">›</span> Connect via Windows SSO
+            </button>
+            <div class="wiz-b-fallback">
+              Fallback: domain\username + password prompt.<br>
+              Stored in Windows Credential Manager (DPAPI-encrypted).
+            </div>
+            <div class="wiz-b-statusbar">v0.1.0 · Phase 0 · Spike A pending</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<hr class="screen-divider">
+
+<!-- ============================================================
+     SECTION 2: SYNC STATUS WINDOW
+     ============================================================ -->
+<div class="screen-section">
+  <div class="section-title">2. Sync Status Window</div>
+  <div class="section-desc">Main panel opened from tray: library cards, permission badges, activity log.</div>
+
+  <div class="variants-row">
+
+    <!-- STATUS A -->
+    <div class="variant-wrap">
+      <div class="variant-label a">A — Fluent Native</div>
+      <div class="window">
+        <div class="window-titlebar light">
+          <span class="win-btn win-close"></span>
+          <span class="win-btn win-min"></span>
+          <span class="win-btn win-max"></span>
+          <span class="titlebar-title light">DatamDrive</span>
+        </div>
+        <div class="status-a">
+          <div class="sta-header">
+            <div class="sta-logo-row">
+              <div class="sta-logo-icon">☁</div>
+              <span class="sta-logo-name">DatamDrive</span>
+            </div>
+            <div class="sta-sync-badge">
+              <div class="sta-sync-dot"></div>
+              Syncing...
+            </div>
+            <span class="sta-lib-count">2 libraries</span>
+          </div>
+          <div class="sta-content">
+            <div>
+              <div class="sta-section-hd">Libraries</div>
+              <div class="sta-cards">
+                <div class="sta-card">
+                  <div class="sta-card-top">
+                    <span class="sta-card-name">Engineering Docs</span>
+                    <span class="sta-perm rw">RW</span>
+                  </div>
+                  <div class="sta-card-url">sp.company.local/sites/engineering</div>
+                  <div class="sta-card-status active">↑↓ Last synced 8s ago</div>
+                </div>
+                <div class="sta-card">
+                  <div class="sta-card-top">
+                    <span class="sta-card-name">HR Policies</span>
+                    <span class="sta-perm ro">RO 🔒</span>
+                  </div>
+                  <div class="sta-card-url">sp.company.local/sites/hr</div>
+                  <div class="sta-card-status idle">↓ Last synced 2m ago</div>
+                </div>
+              </div>
+            </div>
+            <div class="sta-log-section">
+              <div class="sta-section-hd">Recent Activity</div>
+              <table class="sta-log-table">
+                <thead>
+                  <tr><th>Time</th><th>Level</th><th>Event</th><th>File</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>14:31:08</td><td><span class="sta-lv info">INFO</span></td><td>file.uploaded</td><td>design-spec.docx</td></tr>
+                  <tr><td>14:31:02</td><td><span class="sta-lv info">INFO</span></td><td>poll.complete</td><td>Engineering Docs</td></tr>
+                  <tr><td>14:30:55</td><td><span class="sta-lv info">INFO</span></td><td>file.downloaded</td><td>Q3-roadmap.xlsx</td></tr>
+                  <tr><td>14:30:41</td><td><span class="sta-lv warn">WARN</span></td><td>upload.blocked</td><td>salary-data.xlsx</td></tr>
+                  <tr><td>14:30:29</td><td><span class="sta-lv info">INFO</span></td><td>perm.recheck</td><td>HR Policies</td></tr>
+                  <tr><td>14:29:58</td><td><span class="sta-lv info">INFO</span></td><td>poll.complete</td><td>HR Policies</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="sta-footer">
+            <span class="sta-footer-ok"><div class="sta-footer-dot"></div> Polling every 30s</span>
+            <span>0 errors</span>
+            <span>%APPDATA%\DatamDrive\logs\</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS B -->
+    <div class="variant-wrap">
+      <div class="variant-label b">B — Pro Dark</div>
+      <div class="window">
+        <div class="window-titlebar dark">
+          <span class="win-btn win-close"></span>
+          <span class="win-btn win-min"></span>
+          <span class="win-btn win-max"></span>
+          <span class="titlebar-title dark">DatamDrive</span>
+        </div>
+        <div class="status-b">
+          <div class="stb-sidebar">
+            <div class="stb-sidebar-hd">Libraries</div>
+            <div class="stb-lib-row active">
+              <div class="stb-lib-dot sync"></div>
+              <div class="stb-lib-info">
+                <div class="stb-lib-name">Engineering Docs</div>
+                <div class="stb-lib-meta">syncing · 8s ago</div>
+              </div>
+              <span class="stb-perm rw">RW</span>
+            </div>
+            <div class="stb-lib-row">
+              <div class="stb-lib-dot ro"></div>
+              <div class="stb-lib-info">
+                <div class="stb-lib-name">HR Policies</div>
+                <div class="stb-lib-meta">read-only · idle</div>
+              </div>
+              <span class="stb-perm ro">RO</span>
+            </div>
+            <div class="stb-add">+ Add library</div>
+          </div>
+          <div class="stb-main">
+            <div class="stb-toolbar">
+              <button class="stb-filter on">ALL</button>
+              <button class="stb-filter off">INFO</button>
+              <button class="stb-filter off">WARN</button>
+              <button class="stb-filter off">ERROR</button>
+              <span class="stb-poll-time">Last poll: 8s ago</span>
+            </div>
+            <div class="stb-log">
+              <div class="stb-line"><span class="stb-ts">14:31:08</span><span class="stb-lv info">INFO</span><span class="stb-ev">file.uploaded</span><span class="stb-file">/Engineering Docs/design-spec.docx</span></div>
+              <div class="stb-line"><span class="stb-ts">14:31:02</span><span class="stb-lv info">INFO</span><span class="stb-ev">poll.complete</span><span class="stb-file">Engineering Docs — 0 changes</span></div>
+              <div class="stb-line"><span class="stb-ts">14:30:55</span><span class="stb-lv info">INFO</span><span class="stb-ev">file.downloaded</span><span class="stb-file">/Engineering Docs/Q3-roadmap.xlsx</span></div>
+              <div class="stb-line"><span class="stb-ts">14:30:41</span><span class="stb-lv warn">WARN</span><span class="stb-ev">upload.blocked</span><span class="stb-file">/HR Policies/salary-data.xlsx — permission: ro</span></div>
+              <div class="stb-line"><span class="stb-ts">14:30:29</span><span class="stb-lv info">INFO</span><span class="stb-ev">perm.recheck</span><span class="stb-file">HR Policies — RO confirmed (5m interval)</span></div>
+              <div class="stb-line"><span class="stb-ts">14:30:15</span><span class="stb-lv info">INFO</span><span class="stb-ev">conflict.resolved</span><span class="stb-file">/Engineering Docs/spec (conflict — akz — 2026-06-30).docx</span></div>
+              <div class="stb-line"><span class="stb-ts">14:29:58</span><span class="stb-lv info">INFO</span><span class="stb-ev">poll.complete</span><span class="stb-file">HR Policies — 1 change</span></div>
+              <div class="stb-line"><span class="stb-ts">14:29:44</span><span class="stb-lv info">INFO</span><span class="stb-ev">file.downloaded</span><span class="stb-file">/HR Policies/policy-2026-v3.pdf</span></div>
+              <div class="stb-line"><span class="stb-ts">14:29:30</span><span class="stb-lv info">INFO</span><span class="stb-ev">poll.start</span><span class="stb-file">Engineering Docs — token: abc123ef8d</span></div>
+              <div class="stb-line"><span class="stb-ts">14:29:11</span><span class="stb-lv warn">WARN</span><span class="stb-ev">retry.transient</span><span class="stb-file">HTTP 503 — backoff 2s (attempt 1/5)</span></div>
+              <div class="stb-line"><span class="stb-ts">14:28:55</span><span class="stb-lv info">INFO</span><span class="stb-ev">file.renamed</span><span class="stb-file">/Engineering Docs/brief-old.docx → brief-final.docx</span></div>
+              <div class="stb-line"><span class="stb-ts">14:28:40</span><span class="stb-lv info">INFO</span><span class="stb-ev">recycle.sent</span><span class="stb-file">/Engineering Docs/old-draft.docx → SP Recycle Bin</span></div>
+            </div>
+            <div class="stb-statusbar">
+              <span class="stb-s-item"><span class="stb-s-dot b"></span>Engineering Docs: syncing</span>
+              <span class="stb-s-item"><span class="stb-s-dot g"></span>HR Policies: idle</span>
+              <span>0 errors</span>
+              <span style="margin-left:auto;">uptime 3m 12s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<hr class="screen-divider">
+
+<!-- ============================================================
+     SECTION 3: TRAY MENU + ICON STATES
+     ============================================================ -->
+<div class="screen-section">
+  <div class="section-title">3. Tray Menu &amp; Icon States</div>
+  <div class="section-desc">Right-click context menu from the system tray, plus icon state variants (idle / syncing / error).</div>
+
+  <div class="variants-row">
+
+    <!-- TRAY A -->
+    <div class="variant-wrap">
+      <div class="variant-label a">A — Fluent Native</div>
+      <div class="window">
+        <div class="window-titlebar light">
+          <span class="win-btn win-close"></span>
+          <span class="win-btn win-min"></span>
+          <span class="win-btn win-max"></span>
+          <span class="titlebar-title light">Tray Menu &amp; Icons</span>
+        </div>
+        <div class="tray-a-bg">
+          <div class="tray-a-menu">
+            <div class="tray-a-mhdr">
+              <div class="tray-a-micon">☁</div>
+              <div>
+                <div class="tray-a-mtitle">DatamDrive</div>
+                <div class="tray-a-mstatus">
+                  <span class="tray-a-mdot"></span> Syncing · 2 libraries
+                </div>
+              </div>
+            </div>
+            <div class="tray-a-div"></div>
+            <div class="tray-a-item pri">
+              <span class="tray-a-iico">◈</span>
+              Open DatamDrive
+            </div>
+            <div class="tray-a-item">
+              <span class="tray-a-iico">≡</span>
+              Libraries
+              <span class="tray-a-chev">›</span>
+            </div>
+            <div class="tray-a-sub">
+              <div class="tray-a-subitem">
+                <span class="tray-a-libdot g"></span> Engineering Docs
+              </div>
+              <div class="tray-a-subitem">
+                <span class="tray-a-libdot o"></span> HR Policies (read-only)
+              </div>
+            </div>
+            <div class="tray-a-item">
+              <span class="tray-a-iico">⏸</span>
+              Pause Sync
+            </div>
+            <div class="tray-a-div"></div>
+            <div class="tray-a-item">
+              <span class="tray-a-iico">⚙</span>
+              Settings
+            </div>
+            <div class="tray-a-item">
+              <span class="tray-a-iico">≡</span>
+              Activity Log
+            </div>
+            <div class="tray-a-div"></div>
+            <div class="tray-a-item red">
+              <span class="tray-a-iico" style="color:#C0392B;">✕</span>
+              Quit DatamDrive
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:10px;color:#888;margin-bottom:16px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;">Icon States</div>
+            <div class="tray-a-icons-col">
+              <div class="tray-a-state">
+                <div class="tray-a-ibox">☁</div>
+                <span class="tray-a-slbl">Idle</span>
+              </div>
+              <div class="tray-a-state">
+                <div class="tray-a-ibox">↻</div>
+                <span class="tray-a-slbl">Syncing</span>
+              </div>
+              <div class="tray-a-state">
+                <div class="tray-a-ibox" style="font-size:20px;">☁<span style="font-size:14px;color:#C0392B;vertical-align:super;">!</span></div>
+                <span class="tray-a-slbl">Error</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAY B -->
+    <div class="variant-wrap">
+      <div class="variant-label b">B — Pro Dark</div>
+      <div class="window">
+        <div class="window-titlebar dark">
+          <span class="win-btn win-close"></span>
+          <span class="win-btn win-min"></span>
+          <span class="win-btn win-max"></span>
+          <span class="titlebar-title dark">Tray Menu &amp; Icons</span>
+        </div>
+        <div class="tray-b-bg">
+          <div class="tray-b-menu">
+            <div class="tray-b-mhdr">
+              <div class="tray-b-mtitle">DatamDrive</div>
+              <div class="tray-b-mstatus">
+                <span class="tray-b-statdot">●</span> 2 libraries syncing · 0 errors
+              </div>
+            </div>
+            <div class="tray-b-div"></div>
+            <div class="tray-b-item">
+              <span class="tray-b-libdot b"></span>
+              <div class="tray-b-libinfo">
+                <div class="tray-b-libname">Engineering Docs</div>
+                <div class="tray-b-libmeta">3s ago</div>
+              </div>
+              <span class="tray-b-pb rw">RW</span>
+            </div>
+            <div class="tray-b-item">
+              <span class="tray-b-libdot o"></span>
+              <div class="tray-b-libinfo">
+                <div class="tray-b-libname">HR Policies</div>
+                <div class="tray-b-libmeta">idle</div>
+              </div>
+              <span class="tray-b-pb ro">RO</span>
+            </div>
+            <div class="tray-b-div"></div>
+            <div class="tray-b-item act">
+              <span class="tray-b-iico">↗</span> Open
+            </div>
+            <div class="tray-b-item act">
+              <span class="tray-b-iico">⏸</span> Pause Sync
+            </div>
+            <div class="tray-b-div"></div>
+            <div class="tray-b-item act">
+              <span class="tray-b-iico">⚙</span> Settings
+            </div>
+            <div class="tray-b-item act">
+              <span class="tray-b-iico">≡</span> Activity Log
+            </div>
+            <div class="tray-b-div"></div>
+            <div class="tray-b-item red">
+              <span style="width:14px;"></span> Quit
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:10px;color:#2C2C48;margin-bottom:16px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;">Icon States</div>
+            <div class="tray-b-icons-col">
+              <div class="tray-b-state">
+                <div class="tray-b-ibox">☁</div>
+                <span class="tray-b-slbl">Idle</span>
+              </div>
+              <div class="tray-b-state">
+                <div class="tray-b-ibox">↻</div>
+                <span class="tray-b-slbl">Syncing</span>
+              </div>
+              <div class="tray-b-state">
+                <div class="tray-b-ibox">
+                  ☁
+                  <div class="tray-b-badge"></div>
+                </div>
+                <span class="tray-b-slbl">Error</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

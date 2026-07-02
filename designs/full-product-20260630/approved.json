@@ -1,0 +1,9 @@
+{
+  "approved_variant": "A",
+  "direction": "Fluent Native (Windows 11)",
+  "feedback": "Direction A chosen. Setup Wizard confirmed good. Sync Status and Tray not flagged for changes.",
+  "date": "2026-06-30T11:29:23Z",
+  "screens": ["setup-wizard", "sync-status", "tray-menu"],
+  "date_session": "2026-06-30",
+  "branch": "master"
+}

@@ -1,0 +1,93 @@
+{
+  "name": "datamdrive",
+  "version": "0.1.0",
+  "description": "On-premise SharePoint sync client for Windows",
+  "private": true,
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "dev:renderer": "vite",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
+    "dev": "npm run build:main && concurrently --kill-others-on-fail \"npm run dev:main\" \"npm run dev:renderer\" \"wait-on http://localhost:5173 && npm run dev:electron\"",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "build": "npm run build:main && npm run build:renderer",
+    "rebuild": "electron-rebuild",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@pnp/nodejs": "^4.20.0",
+    "@pnp/sp": "^4.20.0",
+    "better-sqlite3": "^12.11.1",
+    "chokidar": "^3.6.0",
+    "electron-updater": "^6.8.9",
+    "keytar": "^7.9.0",
+    "node-fetch": "^2.7.0",
+    "node-sp-auth": "^3.0.9"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.6",
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/node": "^20.12.2",
+    "@types/node-fetch": "^2.6.11",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0",
+    "electron": "^35.7.5",
+    "electron-builder": "^26.15.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.3.1",
+    "vitest": "^1.6.0",
+    "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "com.datamdrive.app",
+    "productName": "DatamDrive",
+    "copyright": "Copyright © 2026 DatamDrive Contributors",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      "node_modules/**/*",
+      "!node_modules/.cache"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "draft"
+    }
+  }
+}
