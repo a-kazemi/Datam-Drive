@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import type { Library, LogEntry, SyncStatus as SyncStatusType } from '../../shared/ipc-types'
+import DatamLogo from '../components/DatamLogo'
 
 interface Props {
   onOpenSettings: () => void
@@ -59,14 +60,10 @@ export default function SyncStatus({ onOpenSettings, onLogout }: Props) {
         height: 52, background: '#FAFAFA', borderBottom: '1px solid #E8E8E8',
         display: 'flex', alignItems: 'center', padding: '0 20px', gap: 12, flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <div style={{
-            width: 22, height: 22, background: '#0078D4', borderRadius: 4,
-            fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>☁</div>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>DatamDrive</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <DatamLogo compact />
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>Drive</span>
         </div>
-
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
           background: syncStatus.status === 'error' ? '#FCEAEA' : '#E9F4FB',

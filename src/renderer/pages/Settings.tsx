@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import type { Settings } from '../../shared/ipc-types'
+import DatamLogo from '../components/DatamLogo'
 
 interface Props {
   onBack: () => void
@@ -36,9 +37,9 @@ export default function SettingsPage({ onBack }: Props) {
         display: 'flex', alignItems: 'center', padding: '0 20px', gap: 12, flexShrink: 0,
       }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#555', padding: '0 4px' }}>←</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <div style={{ width: 22, height: 22, background: '#0078D4', borderRadius: 4, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>☁</div>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>DatamDrive — Settings</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <DatamLogo compact />
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>Drive - Settings</span>
         </div>
       </div>
 

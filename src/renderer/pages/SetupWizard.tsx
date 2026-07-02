@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import DatamLogo from '../components/DatamLogo'
 
 interface Props {
   onAuthenticated: () => void
@@ -56,14 +57,9 @@ export default function SetupWizard({ onAuthenticated }: Props) {
         width: 224, background: '#2C2C3E', padding: '28px 20px',
         display: 'flex', flexDirection: 'column', flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 40 }}>
-          <div style={{
-            width: 28, height: 28, background: '#0078D4', borderRadius: 6,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
-          }}>☁</div>
-          <span style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>DatamDrive</span>
+        <div style={{ marginBottom: 40 }}>
+          <DatamLogo onDark />
         </div>
-
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {STEPS.map((s, i) => {
             const active = step === s.n

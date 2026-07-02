@@ -78,9 +78,6 @@ function refreshMenu(): void {
 
 function getIcon(state: TrayState): Electron.NativeImage {
   const name = state === 'error' ? 'icon-error.ico' : state === 'syncing' ? 'icon-sync.ico' : 'icon.ico'
-  try {
-    return nativeImage.createFromPath(path.join(__dirname, '..', '..', 'assets', name))
-  } catch {
-    return nativeImage.createEmpty()
-  }
+  const image = nativeImage.createFromPath(path.join(__dirname, '..', '..', 'assets', name))
+  return image.isEmpty() ? nativeImage.createEmpty() : image
 }
