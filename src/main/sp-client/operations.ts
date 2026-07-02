@@ -60,6 +60,13 @@ export async function getDocumentLibraries(siteUrl: string): Promise<SpList[]> {
   return ((await resp.json() as { value: SpList[] }).value)
 }
 
+export async function getListRootFolderUrl(siteUrl: string, listId: string): Promise<string> {
+  const base = siteUrl.replace(/\/$/, '')
+  const resp = await spFetch(`${base}/_api/web/lists('${listId}')/RootFolder?$select=ServerRelativeUrl`)
+  if (!resp.ok) throw new Error(`getListRootFolderUrl: HTTP ${resp.status}`)
+  return (await resp.json() as { ServerRelativeUrl: string }).ServerRelativeUrl
+}
+
 export async function getEffectivePermissions(siteUrl: string, listId: string): Promise<EffectivePermissions> {
   const base = siteUrl.replace(/\/$/, '')
   const resp = await spFetch(`${base}/_api/web/lists('${listId}')/EffectiveBasePermissions`)

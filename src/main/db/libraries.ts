@@ -5,6 +5,7 @@ export interface LibraryRow {
   site_url: string
   list_id: string
   title: string
+  root_folder_url: string | null
   local_root: string
   change_token: string | null
   last_polled: number | null
@@ -14,8 +15,8 @@ export interface LibraryRow {
 
 export function addLibrary(lib: Omit<LibraryRow, 'id' | 'change_token' | 'last_polled' | 'status'>): number {
   const r = getDb().prepare(`
-    INSERT INTO libraries (site_url, list_id, title, local_root, permission_level)
-    VALUES (@site_url, @list_id, @title, @local_root, @permission_level)
+    INSERT INTO libraries (site_url, list_id, title, root_folder_url, local_root, permission_level)
+    VALUES (@site_url, @list_id, @title, @root_folder_url, @local_root, @permission_level)
   `).run(lib)
   return r.lastInsertRowid as number
 }

@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron'
+import { ipcMain, BrowserWindow, dialog } from 'electron'
 import { trySso, loginWithCredentials, loginFromStoredCredentials, logout, getCurrentAuth, ensureAuthForSite } from './auth'
 import { getAllLibraries } from './db/libraries'
 import { clearLogs, getRecentEntries, setLogEmitter, LogEntry } from './logger'
@@ -89,7 +89,7 @@ export function initIpc(mainWindow: BrowserWindow): void {
     }
   })
 
-  ipcMain.handle('libraries:add', async (_, req: { siteUrl: string; listId: string; title: string; localRoot: string }) => {
+  ipcMain.handle('libraries:add', async (_, req: { siteUrl: string; listId: string; title: string; rootFolderUrl?: string; localRoot?: string; syncParentRoot?: string }) => {
     try {
       const r = await mountLibrary(req)
       if (r.error) return { success: false, error: r.error }
@@ -140,6 +140,22 @@ export function initIpc(mainWindow: BrowserWindow): void {
     const result = clearLogs()
     win?.webContents.send('log:cleared')
     return { success: true, ...result }
+  })
+
+  ipcMain.handle('dialog:select-folder', async (_, defaultPath?: string) => {
+    const options: Electron.OpenDialogOptions = {
+      title: 'Choose sync folder',
+      defaultPath,
+      properties: ['openDirectory', 'createDirectory'],
+    }
+    const result = win
+      ? await dialog.showOpenDialog(win, options)
+      : await dialog.showOpenDialog(options)
+
+    return {
+      success: !result.canceled && result.filePaths.length > 0,
+      path: result.filePaths[0] ?? null,
+    }
   })
 
   // ── Settings ──────────────────────────────────────────────────────

@@ -27,6 +27,28 @@ export function insertSyncItem(item: Omit<SyncItemRow, 'id'>): number {
 }
 
 export function upsertSyncItem(item: Omit<SyncItemRow, 'id'>): void {
+  const existingByServer = item.server_url
+    ? getDb().prepare('SELECT id FROM sync_items WHERE server_url = ?').get(item.server_url) as { id: number } | undefined
+    : undefined
+
+  if (existingByServer) {
+    getDb().prepare('DELETE FROM sync_items WHERE local_path = ? AND id <> ?').run(item.local_path, existingByServer.id)
+    getDb().prepare(`
+      UPDATE sync_items SET
+        local_path       = @local_path,
+        sp_item_id       = @sp_item_id,
+        etag             = @etag,
+        sp_version       = @sp_version,
+        last_synced_at   = @last_synced_at,
+        local_mtime      = @local_mtime,
+        local_size       = @local_size,
+        dirty            = @dirty,
+        permission_level = @permission_level
+      WHERE id = @id
+    `).run({ ...item, id: existingByServer.id })
+    return
+  }
+
   getDb().prepare(`
     INSERT INTO sync_items
       (server_url, local_path, sp_item_id, etag, sp_version,
@@ -77,6 +99,11 @@ export function getByServerUrl(serverUrl: string): SyncItemRow | undefined {
 
 export function deleteByLocalPath(localPath: string): void {
   getDb().prepare('DELETE FROM sync_items WHERE local_path = ?').run(localPath)
+}
+
+export function deleteByLocalRoot(localRoot: string): void {
+  getDb().prepare('DELETE FROM sync_items WHERE local_path = ? OR local_path LIKE ?').run(localRoot, `${localRoot}\\%`)
+  getDb().prepare('DELETE FROM sync_items WHERE local_path LIKE ?').run(`${localRoot}/%`)
 }
 
 export function updatePermissionLevel(serverUrl: string, level: string): void {

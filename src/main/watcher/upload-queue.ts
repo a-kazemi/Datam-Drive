@@ -9,7 +9,6 @@ import { log } from '../logger'
 import { localPathToServerUrl } from '../poller/initial-sync'
 import path from 'path'
 import fs from 'fs'
-import { URL } from 'url'
 
 export type NotifyFn = (msg: string) => void
 let notifyUser: NotifyFn = () => {}
@@ -144,7 +143,10 @@ async function handleMkdir(localPath: string, lib: LibraryRow): Promise<void> {
 }
 
 function deriveServerUrl(localPath: string, lib: LibraryRow): string {
-  const sitePath = new URL(lib.site_url).pathname.replace(/\/$/, '')
+  if (lib.root_folder_url) {
+    return localPathToServerUrl(localPath, lib.local_root, lib.root_folder_url)
+  }
+
   const relative = path.relative(lib.local_root, localPath).split(path.sep).join('/')
-  return `${sitePath}/${lib.title}/${relative}`
+  return `${new URL(lib.site_url).pathname.replace(/\/$/, '')}/${lib.title}/${relative}`
 }

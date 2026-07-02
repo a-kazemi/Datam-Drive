@@ -41,6 +41,7 @@ export function initDb(): Database.Database {
       site_url         TEXT NOT NULL,
       list_id          TEXT NOT NULL UNIQUE,
       title            TEXT NOT NULL,
+      root_folder_url  TEXT,
       local_root       TEXT NOT NULL UNIQUE,
       change_token     TEXT,
       last_polled      INTEGER,
@@ -53,6 +54,11 @@ export function initDb(): Database.Database {
       value TEXT NOT NULL
     );
   `);
+
+  const libraryColumns = db.prepare("PRAGMA table_info(libraries)").all() as { name: string }[];
+  if (!libraryColumns.some(c => c.name === "root_folder_url")) {
+    db.exec("ALTER TABLE libraries ADD COLUMN root_folder_url TEXT");
+  }
 
   const insert = db.prepare(
     "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",

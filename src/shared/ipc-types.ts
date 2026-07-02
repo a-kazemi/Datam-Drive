@@ -3,6 +3,7 @@ export interface Library {
   site_url: string
   list_id: string
   title: string
+  root_folder_url: string | null
   local_root: string
   change_token: string | null
   last_polled: number | null

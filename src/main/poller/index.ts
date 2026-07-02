@@ -1,4 +1,4 @@
-import { getChanges, getListItemById, StaleChangeTokenError, downloadFile, SpListItem } from '../sp-client/operations'
+import { getChanges, getListItemById, getListRootFolderUrl, StaleChangeTokenError, downloadFile, SpListItem } from '../sp-client/operations'
 import { getAllLibraries, updateChangeToken, resetChangeToken, updateStatus, LibraryRow } from '../db/libraries'
 import { getByServerUrl, upsertSyncItem } from '../db/sync-items'
 import { runInitialSync, serverUrlToLocalPath } from './initial-sync'
@@ -93,8 +93,8 @@ async function pollOne(libraryId: number): Promise<void> {
     if (!lib.change_token) {
       // T8: No token → INITIAL ENUMERATE (not GetChanges(null))
       log('info', 'poll.initial', lib.title, 'First sync — enumerating all items')
-      const folderName = lib.title  // fallback; accurate name comes from SP list root folder
-      await runInitialSync(libraryId, lib.site_url, lib.list_id, lib.local_root, folderName)
+      const rootFolderUrl = lib.root_folder_url ?? await getListRootFolderUrl(lib.site_url, lib.list_id)
+      await runInitialSync(libraryId, lib.site_url, lib.list_id, lib.local_root, rootFolderUrl)
     } else {
       await runDelta(lib)
     }
@@ -154,8 +154,8 @@ async function applyChange(lib: LibraryRow, change: import('../sp-client/operati
     }
 
     const serverUrl = item.FileRef
-    const folderName = lib.title
-    const localPath = serverUrlToLocalPath(serverUrl, lib.site_url, lib.local_root, folderName)
+    const rootFolderUrl = lib.root_folder_url ?? await getListRootFolderUrl(lib.site_url, lib.list_id)
+    const localPath = serverUrlToLocalPath(serverUrl, rootFolderUrl, lib.local_root)
     const existing = getByServerUrl(serverUrl)
 
     if (existing?.dirty === 1) {

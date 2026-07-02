@@ -272,7 +272,7 @@ function AddLibraryModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
   const [siteUrl, setSiteUrl] = useState('')
   const [libraries, setLibraries] = useState<import('../../shared/ipc-types').SpListInfo[]>([])
   const [selected, setSelected] = useState<string | null>(null)
-  const [localRoot, setLocalRoot] = useState('')
+  const [syncParentRoot, setSyncParentRoot] = useState(() => window.localStorage.getItem('datamDrive.syncParentRoot') ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [step, setStep] = useState<'pick-site' | 'pick-lib' | 'pick-folder'>('pick-site')
@@ -295,7 +295,7 @@ function AddLibraryModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
   }
 
   async function addLibrary() {
-    if (!selected || !localRoot.trim()) { setError('Select a library and choose a local folder.'); return }
+    if (!selected || !syncParentRoot.trim()) { setError('Select a library and choose a sync folder.'); return }
     const lib = libraries.find(l => l.Id === selected)!
     setError(''); setLoading(true)
 
@@ -303,13 +303,27 @@ function AddLibraryModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
       siteUrl: siteUrl.trim(),
       listId: selected,
       title: lib.Title,
-      localRoot: localRoot.trim(),
+      rootFolderUrl: lib.RootFolder?.ServerRelativeUrl,
+      syncParentRoot: syncParentRoot.trim(),
     }) as { success: boolean; error?: string }
 
     setLoading(false)
-    if (r.success) onAdded()
+    if (r.success) {
+      window.localStorage.setItem('datamDrive.syncParentRoot', syncParentRoot.trim())
+      onAdded()
+    }
     else setError(r.error ?? 'Failed to add library.')
   }
+
+  async function browseSyncFolder() {
+    const r = await window.datamDrive.invoke('dialog:select-folder', syncParentRoot.trim() || undefined) as { success: boolean; path?: string | null }
+    if (r.success && r.path) setSyncParentRoot(r.path)
+  }
+
+  const selectedLibrary = libraries.find(l => l.Id === selected)
+  const targetFolder = selectedLibrary && syncParentRoot.trim()
+    ? joinPathPreview(syncParentRoot.trim(), safeFolderName(selectedLibrary.Title))
+    : ''
 
   return (
     <div style={{
@@ -358,11 +372,24 @@ function AddLibraryModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
                 ))}
               </div>
 
-              <label style={{ ...modalLabel, marginTop: 16 }}>Local Folder</label>
-              <input
-                type="text" value={localRoot} onChange={e => setLocalRoot(e.target.value)}
-                placeholder="C:\Users\You\DatamDrive\Engineering Docs" style={modalInput}
-              />
+              <label style={{ ...modalLabel, marginTop: 16 }}>Sync Folder</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text" value={syncParentRoot} onChange={e => setSyncParentRoot(e.target.value)}
+                  placeholder="C:\Users\You\Desktop\sync" style={{ ...modalInput, flex: 1 }}
+                />
+                <button
+                  onClick={browseSyncFolder}
+                  type="button"
+                  style={{ ...modalBtn, width: 88, background: '#F5F5F5', color: '#333', border: '1px solid #DCDCDC' }}
+                >
+                  Browse
+                </button>
+              </div>
+              <div style={{ fontSize: 11, color: '#777', marginTop: 7, minHeight: 16 }}>
+                {targetFolder ? `Will create: ${targetFolder}` : 'Choose a parent folder. DatamDrive creates one folder using the library name.'}
+                {targetFolder && <span style={{ color: '#AAA' }}> If it exists, DatamDrive adds _1, _2, ...</span>}
+              </div>
 
               {error && <div style={{ color: '#C62828', fontSize: 12, marginTop: 8 }}>{error}</div>}
 
@@ -370,7 +397,7 @@ function AddLibraryModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
                 <button onClick={() => setStep('pick-site')} style={{ ...modalBtn, background: '#F5F5F5', color: '#333', flex: 1 }}>
                   ← Back
                 </button>
-                <button onClick={addLibrary} disabled={loading || !selected} style={{ ...modalBtn, flex: 2 }}>
+                <button onClick={addLibrary} disabled={loading || !selected || !syncParentRoot.trim()} style={{ ...modalBtn, flex: 2 }}>
                   {loading ? 'Adding…' : 'Add Library'}
                 </button>
               </div>
@@ -386,6 +413,19 @@ function AddLibraryModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
       </div>
     </div>
   )
+}
+
+function safeFolderName(name: string): string {
+  return name
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[. ]+$/g, '') || 'Library'
+}
+
+function joinPathPreview(parent: string, child: string): string {
+  const separator = parent.includes('/') && !parent.includes('\\') ? '/' : '\\'
+  return `${parent.replace(/[\\/]+$/, '')}${separator}${child}`
 }
 
 function LevelBadge({ level }: { level: 'info' | 'warn' | 'error' }) {

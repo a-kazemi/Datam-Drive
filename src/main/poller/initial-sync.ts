@@ -4,7 +4,6 @@ import { updateChangeToken } from '../db/libraries'
 import { log } from '../logger'
 import path from 'path'
 import fs from 'fs'
-import { URL } from 'url'
 
 // T8: Enumerate-then-CurrentChangeToken — never GetChanges(null) which is version-dependent
 export async function runInitialSync(
@@ -12,7 +11,7 @@ export async function runInitialSync(
   siteUrl: string,
   listId: string,
   localRoot: string,
-  libraryFolderName: string
+  libraryRootServerUrl: string
 ): Promise<string> {
   log('info', 'initial-sync.start', listId, `Enumerating ${listId}`)
 
@@ -28,7 +27,7 @@ export async function runInitialSync(
     page++
 
     for (const item of items) {
-      await processInitialItem(item, siteUrl, localRoot, libraryFolderName)
+      await processInitialItem(item, siteUrl, localRoot, libraryRootServerUrl)
     }
 
     log('info', 'initial-sync.page', listId, `Page ${page}: ${items.length} items`)
@@ -43,9 +42,9 @@ async function processInitialItem(
   item: SpListItem,
   siteUrl: string,
   localRoot: string,
-  libraryFolderName: string
+  libraryRootServerUrl: string
 ): Promise<void> {
-  const localPath = serverUrlToLocalPath(item.FileRef, siteUrl, localRoot, libraryFolderName)
+  const localPath = serverUrlToLocalPath(item.FileRef, libraryRootServerUrl, localRoot)
 
   if (item.FSObjType === 1) {
     fs.mkdirSync(localPath, { recursive: true })
@@ -73,27 +72,32 @@ async function processInitialItem(
 
 export function serverUrlToLocalPath(
   serverUrl: string,
-  siteUrl: string,
-  localRoot: string,
-  libraryFolderName: string
+  libraryRootServerUrl: string,
+  localRoot: string
 ): string {
-  // Strip SP site base + library folder name to get file-relative path
-  const sitePath = new URL(siteUrl).pathname.replace(/\/$/, '')
-  let relative = serverUrl.startsWith(sitePath) ? serverUrl.slice(sitePath.length) : serverUrl
-  relative = relative.replace(/^\//, '')  // remove leading slash
-  // relative is now "LibraryFolder/subdir/file.ext"; strip the library folder
-  const segments = relative.split('/')
-  const rest = segments.slice(1).join(path.sep)
+  const normalizedRoot = libraryRootServerUrl.replace(/\/$/, '').toLowerCase()
+  const normalizedServer = serverUrl.toLowerCase()
+  let relative = serverUrl
+
+  if (normalizedServer === normalizedRoot) {
+    relative = ''
+  } else if (normalizedServer.startsWith(`${normalizedRoot}/`)) {
+    relative = serverUrl.slice(libraryRootServerUrl.replace(/\/$/, '').length + 1)
+  } else {
+    relative = path.posix.basename(serverUrl)
+  }
+
+  const rest = relative.split('/').filter(Boolean).join(path.sep)
   return path.join(localRoot, rest)
 }
 
 export function localPathToServerUrl(
   localPath: string,
   localRoot: string,
-  siteUrl: string,
-  libraryFolderName: string
+  libraryRootServerUrl: string
 ): string {
-  const sitePath = new URL(siteUrl).pathname.replace(/\/$/, '')
   const relative = path.relative(localRoot, localPath).split(path.sep).join('/')
-  return `${sitePath}/${libraryFolderName}/${relative}`
+  return relative
+    ? `${libraryRootServerUrl.replace(/\/$/, '')}/${relative}`
+    : libraryRootServerUrl.replace(/\/$/, '')
 }
