@@ -1,7 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { trySso, loginWithCredentials, logout, getCurrentAuth, ensureAuthForSite } from './auth'
+import { trySso, loginWithCredentials, loginFromStoredCredentials, logout, getCurrentAuth, ensureAuthForSite } from './auth'
 import { getAllLibraries } from './db/libraries'
-import { getRecentEntries, setLogEmitter, LogEntry } from './logger'
+import { clearLogs, getRecentEntries, setLogEmitter, LogEntry } from './logger'
 import { getAllSettings, saveSettings } from './db/settings'
 import { mountLibrary, unmountLibrary, enumerateLibraries } from './sync-engine/mount'
 import { startPolling, stopPolling, setLibraryChangedEmitter } from './poller'
@@ -48,6 +48,13 @@ export function initIpc(mainWindow: BrowserWindow): void {
     }
   })
 
+  ipcMain.handle('auth:login-saved', async (_, siteUrl?: string) => {
+    const r = await loginFromStoredCredentials(siteUrl)
+    return r
+      ? { success: true, method: r.method, username: r.username, siteUrl: r.siteUrl }
+      : { success: false }
+  })
+
   ipcMain.handle('auth:logout', async () => {
     await logout()
     stopPolling()
@@ -56,8 +63,16 @@ export function initIpc(mainWindow: BrowserWindow): void {
     return { success: true }
   })
 
-  ipcMain.handle('auth:status', () => {
-    const a = getCurrentAuth()
+  ipcMain.handle('auth:status', async () => {
+    let a = getCurrentAuth()
+    if (!a) {
+      a = await loginFromStoredCredentials()
+      if (!a) {
+        const [firstLibrary] = getAllLibraries()
+        if (firstLibrary) a = await loginFromStoredCredentials(firstLibrary.site_url)
+      }
+    }
+
     return { authenticated: a != null, siteUrl: a?.siteUrl ?? null, username: a?.username ?? null, method: a?.method ?? null }
   })
 
@@ -121,6 +136,11 @@ export function initIpc(mainWindow: BrowserWindow): void {
 
   // ── Log ───────────────────────────────────────────────────────────
   ipcMain.handle('log:recent', () => getRecentEntries())
+  ipcMain.handle('log:clear', () => {
+    const result = clearLogs()
+    win?.webContents.send('log:cleared')
+    return { success: true, ...result }
+  })
 
   // ── Settings ──────────────────────────────────────────────────────
   ipcMain.handle('settings:get', () => getAllSettings())

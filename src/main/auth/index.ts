@@ -45,6 +45,16 @@ async function getStoredCredentialsFor(siteUrl: string): Promise<{ username: str
   return { username: parsed.username, password: parsed.password }
 }
 
+async function getStoredCredentials(): Promise<{ siteUrl: string; username: string; password: string } | null> {
+  const stored = await keytar.getPassword(KEYTAR_SERVICE, KEYTAR_ACCOUNT)
+  if (!stored) return null
+
+  const parsed = JSON.parse(stored) as { siteUrl?: string; username?: string; password?: string }
+  if (!parsed.siteUrl || !parsed.username || !parsed.password) return null
+
+  return { siteUrl: parsed.siteUrl, username: parsed.username, password: parsed.password }
+}
+
 export async function trySso(siteUrl: string): Promise<AuthResult | null> {
   // Spike A: attempt SSO via SSPI using the current Windows domain session.
   // node-sp-auth with NtmlUserCredentials attempts NTLM with the current process token.
@@ -104,6 +114,19 @@ export async function loginFromVault(siteUrl: string): Promise<AuthResult | null
   }
 }
 
+export async function loginFromStoredCredentials(siteUrl?: string): Promise<AuthResult | null> {
+  try {
+    if (siteUrl) return await loginFromVault(siteUrl)
+
+    const stored = await getStoredCredentials()
+    if (!stored) return null
+
+    return await loginWithCredentials(stored.siteUrl, stored.username, stored.password, false)
+  } catch {
+    return null
+  }
+}
+
 export async function reauthenticate(siteUrl: string): Promise<AuthResult | null> {
   const ssoResult = await trySso(siteUrl)
   if (ssoResult) return ssoResult
@@ -123,10 +146,15 @@ export async function ensureAuthForSite(siteUrl: string): Promise<AuthResult | n
   return null
 }
 
-export async function logout(): Promise<void> {
+export async function logout(clearSavedCredentials = false): Promise<void> {
   currentAuth = null
-  try { await keytar.deletePassword(KEYTAR_SERVICE, KEYTAR_ACCOUNT) } catch { /* no entry */ }
-  log('info', 'auth.logout', '', 'Logged out and cleared credentials')
+  if (clearSavedCredentials) {
+    try { await keytar.deletePassword(KEYTAR_SERVICE, KEYTAR_ACCOUNT) } catch { /* no entry */ }
+    log('info', 'auth.logout', '', 'Logged out and cleared saved credentials')
+    return
+  }
+
+  log('info', 'auth.logout', '', 'Logged out')
 }
 
 export async function getAuthRequestOptions(requestUrl?: string): Promise<{ headers: Record<string, string>; agent?: HttpAgent | HttpsAgent }> {

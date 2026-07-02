@@ -14,6 +14,7 @@ export default function SyncStatus({ onOpenSettings, onLogout }: Props) {
   const [paused, setPaused] = useState(false)
   const [logFilter, setLogFilter] = useState<'all' | 'info' | 'warn' | 'error'>('all')
   const [showAddLibrary, setShowAddLibrary] = useState(false)
+  const [clearingLogs, setClearingLogs] = useState(false)
 
   const refresh = useCallback(async () => {
     const [libs, status] = await Promise.all([
@@ -32,12 +33,15 @@ export default function SyncStatus({ onOpenSettings, onLogout }: Props) {
     const unsubLog  = window.datamDrive.on('log:entry', (entry: unknown) => {
       setLogs(prev => [...prev.slice(-99), entry as LogEntry])
     })
+    const unsubLogCleared = window.datamDrive.on('log:cleared', () => {
+      setLogs([])
+    })
     const unsubSync = window.datamDrive.on('sync:state', (state: unknown) => {
       const s = state as { paused: boolean }
       setPaused(s.paused)
     })
 
-    return () => { unsubLib(); unsubLog(); unsubSync() }
+    return () => { unsubLib(); unsubLog(); unsubLogCleared(); unsubSync() }
   }, [refresh])
 
   async function togglePause() {
@@ -47,6 +51,16 @@ export default function SyncStatus({ onOpenSettings, onLogout }: Props) {
     } else {
       await window.datamDrive.invoke('sync:pause')
       setPaused(true)
+    }
+  }
+
+  async function clearActivityLogs() {
+    setClearingLogs(true)
+    try {
+      await window.datamDrive.invoke('log:clear')
+      setLogs([])
+    } finally {
+      setClearingLogs(false)
     }
   }
 
@@ -130,6 +144,18 @@ export default function SyncStatus({ onOpenSettings, onLogout }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span style={sectionHdStyle}>Recent Activity</span>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+              <button
+                onClick={clearActivityLogs}
+                disabled={clearingLogs || logs.length === 0}
+                style={{
+                  padding: '2px 8px', borderRadius: 3, fontSize: 10, fontWeight: 600,
+                  border: '1px solid #E0E0E0', cursor: clearingLogs || logs.length === 0 ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', background: '#fff', color: logs.length === 0 ? '#BBB' : '#555',
+                  textTransform: 'uppercase', marginRight: 4,
+                }}
+              >
+                {clearingLogs ? 'Clearing' : 'Clear Logs'}
+              </button>
               {(['all', 'info', 'warn', 'error'] as const).map(f => (
                 <button
                   key={f}

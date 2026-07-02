@@ -81,3 +81,21 @@ export function setLogEmitter(fn: (entry: LogEntry) => void): void {
 export function getRecentEntries(): LogEntry[] {
   return [...recentEntries]
 }
+
+export function clearLogs(): { removedFiles: number } {
+  recentEntries.length = 0
+
+  let removedFiles = 0
+  try {
+    const dir = getLogDir()
+    for (const file of fs.readdirSync(dir)) {
+      if (!file.startsWith('DatamDrive-') || !file.endsWith('.jsonl')) continue
+      fs.unlinkSync(path.join(dir, file))
+      removedFiles += 1
+    }
+  } catch {
+    // best-effort
+  }
+
+  return { removedFiles }
+}

@@ -27,9 +27,17 @@ export default function SetupWizard({ onAuthenticated }: Props) {
 
     // Try SSO first; fall through to credentials step if it fails
     const result = await window.datamDrive.invoke('auth:try-sso', siteUrl) as { success: boolean }
-    setLoading(false)
 
     if (result.success) {
+      setLoading(false)
+      onAuthenticated()
+      return
+    }
+
+    const saved = await window.datamDrive.invoke('auth:login-saved', siteUrl) as { success: boolean }
+    setLoading(false)
+
+    if (saved.success) {
       onAuthenticated()
     } else {
       setStep(2)

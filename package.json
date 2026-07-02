@@ -15,6 +15,7 @@
     "rebuild": "electron-rebuild",
     "pack": "npm run build && node ./node_modules/electron-builder/cli.js --dir",
     "dist": "npm run build && node ./node_modules/electron-builder/cli.js",
+    "postinstall": "electron-builder install-app-deps",
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "electron ."
@@ -85,9 +86,11 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     },
-    "publish": {
-      "provider": "datamgroup.com",
-      "releaseType": "draft"
-    }
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://datamgroup.com"
+      }
+    ]
   }
 }
