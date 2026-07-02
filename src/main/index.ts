@@ -5,13 +5,14 @@ import { initIpc } from './ipc'
 import { initTray, setTrayState } from './tray'
 import { startPolling, stopPolling } from './poller'
 import { startWatchers, stopAllWatchers } from './watcher'
-import { runStartupDirtyScan } from './startup'
+import { applyWindowsStartupSetting, runStartupDirtyScan } from './startup'
 import { initUpdater } from './updater'
 import { log } from './logger'
 
 const isDev = process.env.NODE_ENV === 'development'
 
 let mainWindow: BrowserWindow | null = null
+let isQuitting = false
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -38,8 +39,12 @@ function createWindow(): void {
 
   mainWindow.once('ready-to-show', () => mainWindow?.show())
 
-  // Minimize to tray on close
-  mainWindow.on('close', e => { e.preventDefault(); mainWindow?.hide() })
+  // Minimize to tray on normal close, but allow real application quits.
+  mainWindow.on('close', e => {
+    if (isQuitting) return
+    e.preventDefault()
+    mainWindow?.hide()
+  })
   mainWindow.on('closed', () => { mainWindow = null })
 }
 
@@ -49,6 +54,8 @@ app.whenReady().then(() => {
 
   createWindow()
   if (mainWindow) { initIpc(mainWindow); initTray(mainWindow) }
+
+  applyWindowsStartupSetting()
 
   // T4: Startup dirty-row scan before watchers begin
   runStartupDirtyScan()
@@ -60,6 +67,7 @@ app.whenReady().then(() => {
 })
 
 app.on('before-quit', () => {
+  isQuitting = true
   stopPolling()
   stopAllWatchers()
   log('info', 'app.stop', '', 'Shutting down')

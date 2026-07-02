@@ -6,6 +6,7 @@ import { getAllSettings, saveSettings } from './db/settings'
 import { mountLibrary, unmountLibrary, enumerateLibraries } from './sync-engine/mount'
 import { startPolling, stopPolling, setLibraryChangedEmitter } from './poller'
 import { startWatchers, stopAllWatchers } from './watcher'
+import { applyWindowsStartupSetting } from './startup'
 import { setTrayState, notify, refreshTray } from './tray'
 import { setNotifyFn as setConflictNotify } from './conflict/resolver'
 import { setNotifyFn as setUploadNotify } from './watcher/upload-queue'
@@ -126,6 +127,7 @@ export function initIpc(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('settings:set', (_, s: Partial<Settings>) => {
     saveSettings(s)
+    if (s.startWithWindows != null) applyWindowsStartupSetting(s.startWithWindows)
     return { success: true }
   })
 

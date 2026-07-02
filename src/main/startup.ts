@@ -1,8 +1,26 @@
+import { app } from 'electron'
 import { getDirtyItems } from './db/sync-items'
 import { getAllLibraries } from './db/libraries'
+import { getAllSettings } from './db/settings'
 import { enqueueUpload } from './watcher/upload-queue'
 import { log } from './logger'
 import path from 'path'
+
+export function applyWindowsStartupSetting(startWithWindows = getAllSettings().startWithWindows): void {
+  if (process.platform !== 'win32') return
+
+  try {
+    app.setLoginItemSettings({
+      name: 'DatamDrive',
+      openAtLogin: startWithWindows,
+      path: process.execPath,
+      args: app.isPackaged ? [] : [app.getAppPath()],
+    })
+    log('info', 'startup.login-item', '', startWithWindows ? 'Enabled Windows startup' : 'Disabled Windows startup')
+  } catch (err) {
+    log('warn', 'startup.login-item.failed', '', String(err))
+  }
+}
 
 // T4: On launch, scan for any dirty rows (from crash or mid-upload quit) and re-queue them
 export function runStartupDirtyScan(): void {

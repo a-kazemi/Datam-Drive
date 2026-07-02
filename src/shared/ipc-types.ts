@@ -27,6 +27,7 @@ export interface SyncStatus {
 export interface Settings {
   pollIntervalMs: number
   maxFileSizeBytes: number
+  startWithWindows: boolean
   autoUpdate: boolean
   updateFeedUrl: string
   paused: boolean

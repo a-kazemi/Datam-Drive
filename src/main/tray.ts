@@ -1,4 +1,4 @@
-import { Tray, Menu, BrowserWindow, nativeImage } from 'electron'
+import { app, Tray, Menu, BrowserWindow, nativeImage } from 'electron'
 import path from 'path'
 import { getAllLibraries } from './db/libraries'
 
@@ -42,13 +42,6 @@ function refreshMenu(): void {
   if (!tray) return
   const libraries = getAllLibraries()
 
-  const libItems = libraries.length > 0
-    ? libraries.map(l => Menu.buildFromTemplate([{
-        label: `${l.title} (${l.permission_level.toUpperCase()})`,
-        enabled: false,
-      }]))
-    : undefined
-
   const paused = currentState === 'paused'
 
   const menu = Menu.buildFromTemplate([
@@ -70,7 +63,7 @@ function refreshMenu(): void {
     { label: 'Settings',     click: () => { showWindow(); mainWindow?.webContents.send('navigate', 'settings') } },
     { label: 'Activity Log', click: () => { showWindow(); mainWindow?.webContents.send('navigate', 'log') } },
     { type: 'separator' },
-    { label: 'Quit DatamDrive', role: 'quit' },
+    { label: 'Quit DatamDrive', click: () => app.quit() },
   ])
 
   tray.setContextMenu(menu)

@@ -2,15 +2,15 @@ import { getChanges, getListItemById, StaleChangeTokenError, downloadFile, SpLis
 import { getAllLibraries, updateChangeToken, resetChangeToken, updateStatus, LibraryRow } from '../db/libraries'
 import { getByServerUrl, upsertSyncItem } from '../db/sync-items'
 import { runInitialSync, serverUrlToLocalPath } from './initial-sync'
-import { schedulePoll, jitter } from './scheduler'
+import { schedulePoll } from './scheduler'
 import { startPermissionRecheck, stopPermissionRecheck } from './permissions'
 import { getAllSettings } from '../db/settings'
 import { log } from '../logger'
-import { sleep } from '../sp-client'
 import fs from 'fs'
 
 let polling = false
 const pollLoops = new Set<number>()
+const pendingPollDelays = new Map<ReturnType<typeof setTimeout>, () => void>()
 
 export function startPolling(): void {
   if (polling) return
@@ -30,6 +30,11 @@ export function startPolling(): void {
 export function stopPolling(): void {
   polling = false
   pollLoops.clear()
+  for (const [timer, resolve] of pendingPollDelays) {
+    clearTimeout(timer)
+    resolve()
+  }
+  pendingPollDelays.clear()
   stopPermissionRecheck()
 }
 
@@ -50,7 +55,7 @@ export function setLibraryChangedEmitter(fn: () => void): void {
 }
 
 async function runLoop(libraryId: number): Promise<void> {
-  await jitter(5000)  // stagger start across libraries
+  await waitForPollingDelay(Math.floor(Math.random() * 5000))  // stagger start across libraries
 
   while (pollLoops.has(libraryId) && polling) {
     const { pollIntervalMs } = getAllSettings()
@@ -60,8 +65,21 @@ async function runLoop(libraryId: number): Promise<void> {
       log('error', 'poll.error', String(libraryId), String(err))
       updateStatus(libraryId, 'error')
     }
-    await sleep(pollIntervalMs)
+    await waitForPollingDelay(pollIntervalMs)
   }
+}
+
+function waitForPollingDelay(ms: number): Promise<void> {
+  if (!polling) return Promise.resolve()
+
+  return new Promise(resolve => {
+    const finish = (): void => {
+      pendingPollDelays.delete(timer)
+      resolve()
+    }
+    const timer = setTimeout(finish, ms)
+    pendingPollDelays.set(timer, finish)
+  })
 }
 
 async function pollOne(libraryId: number): Promise<void> {
