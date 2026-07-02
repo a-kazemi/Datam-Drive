@@ -4,6 +4,10 @@ DatamDrive is a Windows desktop sync client for on-premise SharePoint. It is int
 
 The product goal is simple: selected SharePoint document libraries appear in a local folder, changes sync in the background, files open in native Office apps, and SharePoint permissions are respected by the sync engine.
 
+## Preview
+
+![DatamDrive desktop app preview](assets/datamdrive-preview.gif)
+
 ## Status
 
 DatamDrive is early-stage software. The repository currently contains the Electron desktop shell, setup flow, tray integration, SQLite-backed local state, SharePoint client scaffolding, polling/watch modules, settings, logging, folder mapping, and tests for selected sync/auth behaviors.
