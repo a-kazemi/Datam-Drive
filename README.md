@@ -46,7 +46,7 @@ DatamDrive targets that gap.
 
 ## Recent Changes
 
-- `da6ab6f` fixed SharePoint library folder mapping. Local sync folders now use only the library display title, for example `اسناد پروژه`, while SharePoint server paths such as `/stage/dev/PMO/ProjectDocuments` are stored separately for upload/download mapping.
+- `da6ab6f` fixed SharePoint library folder mapping. Local sync folders now use only the library display title, for example `ProjectDocs`, while SharePoint server paths such as `/stage/dev/PMO/ProjectDocuments` are stored separately for upload/download mapping.
 - `da6ab6f` added duplicate folder handling. If the target local folder already exists, DatamDrive chooses the next available suffix such as `ProjectDocs_1`.
 - `da6ab6f` cleans stale sync item rows when libraries are removed and handles remounting without `server_url` uniqueness errors.
 - `88b9732` added saved credential login from Windows Credential Manager and a Clear Logs control.
